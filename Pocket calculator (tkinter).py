@@ -11,7 +11,7 @@ class CalculatorApp:
 
         self.text = tk.StringVar()
         self.text.set(self.last_string)
-        self.text.trace('w', self.character_limit)
+        self.text.trace_add('write', self.character_limit)
 
         self.create_entry()
         self.create_buttons()
@@ -106,18 +106,23 @@ class CalculatorApp:
             self.expression += self.text.get()
             try:
                 result = eval(self.expression)
-                if len(str(result)) < 10:
+                dot = str(result).find('.')
+                if len(str(result)) <= 10:
+                    self.text.set(str(result))
+                elif len(str(result)) > 10 and dot != -1:
+                    if dot >= 10:
+                        result = round(result)
+                    else:
+                        rnd = 10 - dot - 1
+                        result = round(result, rnd)
                     self.text.set(str(result))
                 else:
-                    try:
-                        dot = str(result).index('.')
-                        rnd = 10 - dot
-                        self.text.set(str(round(result, rnd)))
-                    except ValueError:
-                        for button in self.buttons:
-                            if button.cget('text') != 'C':
-                                button.configure(state='disabled')
-                        self.text.set('Error!')
+                    raise ValueError
+            except ValueError:
+                for button in self.buttons:
+                    if button.cget('text') != 'C':
+                        button.configure(state='disabled')
+                self.text.set('Error!')
             except ZeroDivisionError:
                 for button in self.buttons:
                     if button.cget('text') != 'C':
